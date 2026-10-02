@@ -1,0 +1,528 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Cuadre Contable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  /* Concepto: una hoja de libro diario. Columnas Debe y Haber, reglas finas, tinta azul de sello. */
+  --bg:#E8EEEE; --paper:#FBFDFC; --ink:#13242F; --muted:#586A73; --rule:#C3D0D1;
+  --accent:#2845D6; --accent-ink:#FFFFFF; --accent-soft:#DDE3FA;
+  --good:#17714A; --good-soft:#D5EEE1; --bad:#B3261E; --bad-soft:#F8DBD8; --star-off:#C3D0D1;
+  --display:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A21; --paper:#162631; --ink:#E5EEF0; --muted:#98ABB3; --rule:#2B4150;
+    --accent:#8DA0FF; --accent-ink:#0E1A21; --accent-soft:#222F63;
+    --good:#4FCB8E; --good-soft:#143A2A; --bad:#FF8A80; --bad-soft:#4A1F1C; --star-off:#2B4150;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A21; --paper:#162631; --ink:#E5EEF0; --muted:#98ABB3; --rule:#2B4150;
+  --accent:#8DA0FF; --accent-ink:#0E1A21; --accent-soft:#222F63;
+  --good:#4FCB8E; --good-soft:#143A2A; --bad:#FF8A80; --bad-soft:#4A1F1C; --star-off:#2B4150;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:20px 48px}
+h1,h2,h3,p,ol,ul{margin:0;padding:0}
+ol,ul{list-style:none}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:720px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.small{font-size:.875rem;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.3rem,10vw,3.8rem);line-height:.95;letter-spacing:-.035em;text-wrap:balance}
+h2{font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em;text-wrap:balance}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px}
+
+/* Encabezado */
+.top{display:grid;grid-template-columns:1fr;gap:20px}
+.top .lead{margin-top:12px;max-width:46ch;color:var(--muted)}
+.tacct{display:grid;grid-template-columns:1fr 1fr;border-top:3px solid var(--ink);background:var(--paper);max-width:320px}
+.tacct .th{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:6px;border-bottom:1px solid var(--ink)}
+.tacct .td{padding:10px;display:flex;flex-direction:column;gap:2px;font-size:.85rem;min-width:0}
+.tacct .td b{font-family:var(--mono);font-weight:600}
+.tacct .th+.th,.tacct .td+.td{border-left:1px solid var(--ink)}
+.tacct .td:last-of-type{text-align:right;align-items:flex-end}
+.tcap{grid-column:1/-1;border-top:1px solid var(--rule);padding:6px 10px;font-size:.75rem;color:var(--muted)}
+@media (min-width:640px){.top{grid-template-columns:1fr auto;align-items:end}}
+
+/* Rango */
+.rank{display:grid;grid-template-columns:1fr auto;gap:8px 16px;align-items:end}
+.rank .pts{font-family:var(--mono);font-size:1.5rem;font-weight:600;text-align:right}
+.rank .pts span{font-size:.8rem;color:var(--muted)}
+.meter{grid-column:1/-1;height:8px;background:var(--rule);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.rank .small{grid-column:1/-1}
+
+/* Folios */
+.sec-title{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.levels{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:center;width:100%;text-align:left;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.row:not(:disabled):hover{border-color:var(--accent)}
+.row:disabled{cursor:not-allowed;opacity:.62}
+.folio{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:3px 6px;border-radius:3px;white-space:nowrap}
+.row .nm{font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:-.015em;line-height:1.2}
+.row .tg{grid-column:2;font-size:.85rem;color:var(--muted)}
+.row .rt{grid-column:3;grid-row:1/3;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.stars{display:flex;gap:2px}
+.stars svg{width:18px;height:18px;display:block}
+.stars .on{fill:var(--accent)}
+.stars .off{fill:var(--star-off)}
+.stars.big svg{width:38px;height:38px}
+@media (max-width:420px){.row{grid-template-columns:1fr auto}.row .folio{grid-column:1;justify-self:start}.row .nm{grid-column:1}.row .tg{grid-column:1/-1}.row .rt{grid-column:2;grid-row:1/3}}
+
+/* Fichero de principios */
+.fich{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;background:var(--paper);overflow:hidden}
+.fich details{border-top:1px solid var(--rule)}
+.fich details:first-child{border-top:0}
+.fich summary{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 14px;cursor:pointer;list-style:none;min-height:48px}
+.fich summary::-webkit-details-marker{display:none}
+.fich .num{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.fich .pn{font-weight:600}
+.dots{display:flex;gap:4px}
+.dots i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--muted)}
+.dots i.on{background:var(--good);border-color:var(--good)}
+.fich .fb2{padding:0 14px 14px;display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.fich .key{font-weight:600}
+.fich .ex{color:var(--muted)}
+
+/* Insignias */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.badge{display:flex;gap:10px;align-items:center;border:1px solid var(--rule);border-radius:6px;padding:10px 12px;background:var(--paper);min-width:0}
+.badge .seal{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent);font-family:var(--mono);font-weight:600;font-size:.8rem}
+.badge.locked{opacity:.55}
+.badge.locked .seal{border-style:dashed;border-color:var(--muted);color:var(--muted)}
+.badge b{display:block;font-size:.9rem;line-height:1.25}
+.badge span.d{font-size:.78rem;color:var(--muted);line-height:1.3;display:block}
+
+/* Notas */
+details.card summary{cursor:pointer;font-weight:600}
+details.card .body{margin-top:10px;display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:.92rem}
+.btn{display:inline-flex;justify-content:center;align-items:center;min-height:48px;padding:10px 20px;border-radius:6px;background:var(--accent);color:var(--accent-ink);font-weight:600;border:1px solid var(--accent)}
+.btn.alt{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn:hover{filter:brightness(1.06)}
+.ghost{font-size:.9rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px;min-height:40px;padding-inline:4px}
+
+/* Juego */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bar .lv{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.lives{display:flex;gap:6px;align-items:center}
+.lives i{width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--accent)}
+.lives i.lost{background:transparent;border-color:var(--muted)}
+.hud .st{font-size:.85rem;color:var(--muted)}
+.hud .sc{font-size:1.1rem;font-weight:600}
+.timer{display:flex;align-items:center;gap:10px}
+.track{flex:1;height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+.track i{display:block;height:100%;width:100%;background:var(--accent);transition:width .1s linear}
+.track i.low{background:var(--bad)}
+.timer span{font-size:.85rem;min-width:3ch;text-align:right}
+.q{display:flex;flex-direction:column;gap:14px}
+.q .prompt{font-family:var(--display);font-weight:600;font-size:1.2rem;line-height:1.35;letter-spacing:-.005em}
+.tag{align-self:flex-start;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:1px 6px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ask{color:var(--muted);font-size:.95rem}
+.opts{display:grid;gap:10px;grid-template-columns:1fr}
+.opts.grid{grid-template-columns:1fr 1fr}
+@media (max-width:420px){.opts.grid{grid-template-columns:1fr}}
+.opt{width:100%;text-align:left;min-height:52px;padding:12px 14px;background:var(--paper);border:1.5px solid var(--rule);border-radius:6px;line-height:1.3;display:flex;align-items:center;gap:10px;font-weight:500}
+.opt:not(:disabled):hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{flex:none;font-family:var(--mono);font-size:.72rem;color:var(--muted);border:1px solid var(--rule);border-radius:3px;padding:1px 6px}
+.opt:disabled{cursor:default}
+.opt.is-correct{background:var(--good-soft);border-color:var(--good)}
+.opt.is-wrong{background:var(--bad-soft);border-color:var(--bad)}
+.fb{border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.fb.ok{background:var(--good-soft);border:1px solid var(--good)}
+.fb.no{background:var(--bad-soft);border:1px solid var(--bad)}
+.stamp{align-self:flex-start;font-family:var(--mono);font-weight:600;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;border:2px solid currentColor;border-radius:4px;padding:2px 8px;transform:rotate(-3deg)}
+.fb.ok .stamp{color:var(--good)}
+.fb.no .stamp{color:var(--bad)}
+.fb .gain{font-family:var(--mono);font-weight:600}
+
+/* Resultados */
+.res{display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+.facts{display:flex;flex-wrap:wrap;gap:20px}
+.facts div{display:flex;flex-direction:column}
+.facts b{font-family:var(--mono);font-size:1.4rem;font-weight:600}
+.review{display:flex;flex-direction:column;gap:10px;width:100%}
+.review li{border-top:1px solid var(--rule);padding-top:10px}
+.review b{display:block;font-size:.9rem}
+.review span{font-size:.9rem;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.newb{display:flex;gap:10px;align-items:center;background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;padding:10px 12px;width:100%}
+.newb .seal{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent);font-family:var(--mono);font-weight:600;font-size:.8rem}
+@media (prefers-reduced-motion:reduce){.track i{transition:none}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+'use strict';
+var KEY='cuadre-contable-v2';
+var app=document.getElementById('app');
+
+/* ---------- utilidades ---------- */
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function pad(n){return n<10?'0'+n:''+n;}
+function load(){try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.best)return r;}catch(e){}return {best:{},mast:{}};}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
+var save=load();if(!save.mast)save.mast={};
+
+/* ---------- los 14 principios ---------- */
+var P=[
+ {id:'EQU',n:'Equidad',tip:'Justicia para todos los interesados',
+  def:'La información debe reflejar con justicia los intereses de todos los que se relacionan con la empresa, sin favorecer a un grupo.',
+  caso:'Una empresa presenta su situación tal como es: no oculta deudas para conseguir un préstamo ni infla gastos para pagar menos impuestos. Socios, banco y SRI reciben información justa.',
+  wc:'Presentar la situación real a todos los interesados, sin favorecer a unos sobre otros, es equidad.',
+  viol:'La gerencia ajusta las cifras para favorecer solo a los accionistas mayoritarios, mientras perjudica a los socios minoritarios y a los acreedores.',
+  wv:'Favorecer a un grupo a costa de otros rompe la equidad: la información debe ser justa para todos.',
+  conf:['ENT','PRU','EXP']},
+ {id:'ENT',n:'Ente contable',tip:'El negocio no es el dueño',
+  def:'La empresa es una persona distinta de sus dueños: su patrimonio y sus cuentas no se mezclan con los del propietario.',
+  caso:'El dueño de una panadería compra un televisor para su casa con dinero del negocio. El contador lo anota como retiro del propietario y no como gasto de la panadería.',
+  wc:'Separar lo del negocio de lo del dueño es el principio del ente contable.',
+  viol:'El dueño de una ferretería paga la matrícula de su hijo con dinero de la caja y el contador lo registra como «gasto de la ferretería».',
+  wv:'Mezclar gastos personales con los de la empresa ignora que el negocio es un ente distinto de su dueño.',
+  conf:['EQU','BIE','EMP']},
+ {id:'BIE',n:'Bienes económicos',tip:'Si no se mide en dólares, no entra',
+  def:'Solo se registran los bienes, derechos y obligaciones que se pueden valorar en dinero.',
+  caso:'En el balance aparecen el local, el inventario y las cuentas por cobrar, que se miden en dólares. No aparece la simpatía del gerente, porque no tiene un valor medible.',
+  wc:'Solo entra lo que se puede valorar en dinero: son bienes económicos.',
+  viol:'La empresa registra como activo la «simpatía del equipo de ventas» por $15.000, algo que no puede medirse en dinero.',
+  wv:'Lo que no se puede valorar en dinero no es un bien económico y no debe registrarse como activo.',
+  conf:['MON','COS','OBJ']},
+ {id:'MON',n:'Moneda de cuenta',tip:'Un solo idioma: el dólar',
+  def:'Todos los registros se expresan en una moneda común para poder sumar y comparar; en Ecuador, el dólar.',
+  caso:'Una empresa tiene cajas de inventario, un terreno en metros cuadrados y deudas con distintos plazos. Para sumarlo todo, lo expresa en dólares.',
+  wc:'Expresar todo en dólares permite sumar partidas distintas: es la moneda de cuenta.',
+  viol:'El libro mayor suma $500, 300 euros y 200 unidades de inventario como si fueran la misma moneda.',
+  wv:'Sumar monedas y unidades distintas sin convertirlas rompe la moneda de cuenta: todo debe llevarse en dólares.',
+  conf:['BIE','COS','UNI']},
+ {id:'EMP',n:'Empresa en marcha',tip:'Hoy y mañana: sigue operando',
+  def:'Se supone que la empresa continuará operando de forma indefinida y no que se liquidará pronto.',
+  caso:'La empresa compra una máquina para usarla diez años y la deprecia a lo largo de su vida útil, porque asume que seguirá operando.',
+  wc:'Repartir el costo en la vida útil supone que la empresa sigue operando: empresa en marcha.',
+  viol:'Una empresa que opera con normalidad deprecia toda su maquinaria en un solo mes, como si fuera a cerrar mañana.',
+  wv:'Si la empresa sigue operando, el costo se reparte en la vida útil. Depreciarlo de golpe supone un cierre que no existe.',
+  conf:['COS','EJE','PRU']},
+ {id:'COS',n:'Valuación al costo',tip:'Se registra lo que costó',
+  def:'Los bienes se registran por lo que costó adquirirlos o producirlos, no por valores de mercado cambiantes.',
+  caso:'La empresa compra un terreno por $30.000 y lo registra por ese valor, aunque un vecino ofrezca $45.000.',
+  wc:'El terreno entra por lo que costó, no por ofertas ni por el valor de mercado: valuación al costo.',
+  viol:'Cada trimestre la empresa registra su local por el «precio de mercado esperado» que le dicen los vecinos, ignorando lo que le costó.',
+  wv:'Registrar por opiniones de mercado e ignorar el costo de adquisición va contra la valuación al costo.',
+  conf:['OBJ','BIE','REA']},
+ {id:'EJE',n:'Ejercicio contable',tip:'Un período a la vez',
+  def:'La vida de la empresa se divide en períodos iguales, normalmente un año, para informar sus resultados.',
+  caso:'La empresa cierra sus libros el 31 de diciembre de cada año y presenta sus estados financieros del 1 de enero al 31 de diciembre.',
+  wc:'Cortar la información en períodos iguales, como cada año, es el ejercicio contable.',
+  viol:'La contadora mezcla en un mismo informe las ventas de enero de este año con las de noviembre del año pasado, sin separar períodos.',
+  wv:'Mezclar datos de períodos distintos en un mismo informe rompe la división en ejercicios.',
+  conf:['DEV','UNI','REA']},
+ {id:'DEV',n:'Devengado',tip:'Cuando ocurre, no cuando se cobra o se paga',
+  def:'Los ingresos y los gastos se reconocen en el período en que se generan, sin esperar a cobrar o pagar.',
+  caso:'En diciembre se presta un servicio y se factura. El cliente paga en enero, pero el ingreso se reconoce en diciembre.',
+  wc:'El ingreso pertenece a diciembre porque allí se generó, aunque el cobro llegue en enero: devengado.',
+  viol:'Una empresa registra el gasto de luz de diciembre recién en enero, cuando lo paga, y así diciembre parece más rentable.',
+  wv:'El gasto de diciembre pertenece a diciembre aunque se pague en enero. Reconocerlo tarde viola el devengado.',
+  conf:['REA','EJE','PRU']},
+ {id:'OBJ',n:'Objetividad',tip:'Sin comprobante no hay registro',
+  def:'Cada registro debe apoyarse en evidencia verificable, como facturas y comprobantes, y no en opiniones personales.',
+  caso:'Cada gasto del mes se registra solo si existe una factura o comprobante que lo respalde, no por estimaciones del gerente.',
+  wc:'Un registro respaldado por documentos verificables es objetividad.',
+  viol:'Se registra un gasto de $1.200 «porque el gerente dice que se gastó», sin factura ni comprobante.',
+  wv:'Registrar sin evidencia, por simple dicho, va contra la objetividad.',
+  conf:['COS','EXP','REA']},
+ {id:'REA',n:'Realización',tip:'Se concreta, se registra',
+  def:'Los resultados se reconocen cuando la operación se ha concretado, es decir, cuando se transfiere el bien o se presta el servicio.',
+  caso:'Una tienda recibe un pedido de $5.000 en octubre y lo entrega en noviembre. Reconoce la venta en noviembre, cuando entrega la mercadería.',
+  wc:'La venta se reconoce cuando se entrega la mercadería, o sea, cuando la operación se concreta: realización.',
+  viol:'La tienda registra como venta un pedido que el cliente apenas prometió hacer, sin entregar nada ni emitir factura.',
+  wv:'Un pedido prometido no es una operación concretada. Reconocer la venta antes de entregar viola la realización.',
+  conf:['DEV','OBJ','PRU']},
+ {id:'PRU',n:'Prudencia',tip:'Pérdidas probables sí, ganancias dudosas no',
+  def:'Ante varias alternativas, se escoge la que menos favorezca a los activos y a las ganancias: se reconocen las pérdidas probables, pero no las ganancias inciertas.',
+  caso:'Hay un juicio laboral que probablemente se perderá y se registra una provisión. En cambio, no se registra la ganancia de otro juicio que quizá se gane.',
+  wc:'Provisionar la pérdida probable y esperar para la ganancia dudosa es prudencia.',
+  viol:'La empresa sabe que un cliente quebró y no podrá pagar, pero mantiene la cuenta por cobrar completa para no mostrar pérdidas.',
+  wv:'Mantener intacta una cuenta que no se cobrará esconde una pérdida probable y va contra la prudencia.',
+  conf:['IMP','REA','EXP']},
+ {id:'UNI',n:'Uniformidad',tip:'Mismo criterio, año tras año',
+  def:'Se aplican los mismos criterios y métodos de un período a otro, para poder comparar.',
+  caso:'Desde hace años la empresa deprecia sus vehículos en línea recta y este año sigue con el mismo método, para comparar con los años anteriores.',
+  wc:'Mantener el mismo método año tras año permite comparar: uniformidad.',
+  viol:'Un año la empresa deprecia en línea recta, al siguiente por saldos decrecientes y luego vuelve a cambiar, sin explicación. Los años no se pueden comparar.',
+  wv:'Cambiar de método sin justificación impide comparar los períodos y viola la uniformidad.',
+  conf:['EJE','EXP','IMP']},
+ {id:'IMP',n:'Importancia relativa',tip:'Lo grande se detalla, lo pequeño se simplifica',
+  def:'El detalle con que se trata una partida depende de su efecto en las decisiones: lo insignificante se simplifica.',
+  caso:'Un esfero de $0,50 se registra directamente como gasto, en lugar de llevarlo como activo, porque no cambia ninguna decisión.',
+  wc:'Tratar de forma simple lo insignificante es importancia relativa.',
+  viol:'El cierre se retrasa porque cada grapadora de $4 tiene su ficha de activo fijo y su propio cuadro de depreciación.',
+  wv:'Gastar esfuerzo en detallar algo insignificante va contra la importancia relativa.',
+  conf:['PRU','EXP','UNI']},
+ {id:'EXP',n:'Exposición',tip:'Que el lector entienda todo',
+  def:'Los estados financieros deben mostrar con claridad toda la información necesaria para interpretarlos, incluidas las notas explicativas.',
+  caso:'Los estados financieros incluyen notas sobre el método de depreciación, las garantías otorgadas y un juicio pendiente, para que el lector los interprete bien.',
+  wc:'Las notas aclaran lo que el lector necesita para interpretar las cifras: exposición.',
+  viol:'Los estados financieros no mencionan una demanda por $150.000 ni que el local principal está hipotecado. El lector no puede entender la situación real.',
+  wv:'Omitir hechos que el lector necesita para entender la situación viola la exposición.',
+  conf:['OBJ','IMP','EQU']}
+];
+var PR={},ORDER=[];
+P.forEach(function(p){PR[p.id]=p;ORDER.push(p.id);});
+
+/* ---------- generadores de preguntas ---------- */
+var TXT={d:['Definición','¿A qué principio corresponde?'],c:['Caso','¿Qué principio se está aplicando?'],v:['Infracción','¿Qué principio se está violando?']};
+function mkQ(id,type){
+  var p=PR[id];
+  var text=type==='d'?p.def:type==='c'?p.caso:p.viol;
+  var why=type==='d'?p.def+' Clave: '+p.tip+'.':type==='c'?p.wc:p.wv;
+  var wrong=shuffle(p.conf).slice(0,2);
+  var rest=ORDER.filter(function(k){return k!==id&&wrong.indexOf(k)<0;});
+  wrong.push(shuffle(rest)[0]);
+  var opts=shuffle([id].concat(wrong)).map(function(k){return {key:k,html:PR[k].n};});
+  return {p:id,type:type,tag:TXT[type][0],prompt:text,ask:TXT[type][1],options:opts,correct:id,concept:p.n,explain:why,review:p.def+' Clave: '+p.tip+'.'};
+}
+function pickPrinciples(n){
+  var arr=shuffle(ORDER);
+  arr.sort(function(a,b){return (save.mast[a]||0)-(save.mast[b]||0);});
+  return shuffle(arr.slice(0,n));
+}
+function build(type){return function(){return pickPrinciples(7).map(function(id){return mkQ(id,type);});};}
+function buildExam(){
+  var types=['d','c','v'];
+  return shuffle(ORDER).map(function(id){return mkQ(id,types[Math.floor(Math.random()*3)]);});
+}
+var LEVELS=[
+  {n:1,name:'De la definición al principio',tag:'Lee la definición y reconoce el principio',secs:30,lives:3,build:build('d')},
+  {n:2,name:'Aplica el principio',tag:'Casos reales en los que se cumple un principio',secs:40,lives:3,build:build('c')},
+  {n:3,name:'Detecta la infracción',tag:'Situaciones en las que se rompe un principio',secs:40,lives:3,build:build('v')},
+  {n:4,name:'Examen de los 14',tag:'Los 14 principios, mezcla de definiciones, casos e infracciones',secs:40,lives:5,build:buildExam}
+];
+var RANKS=[[0,'Aprendiz'],[800,'Auxiliar contable'],[2000,'Contador junior'],[3500,'Contador senior'],[4800,'Auditor']];
+function dominated(){return ORDER.filter(function(k){return (save.mast[k]||0)>=2;}).length;}
+var BADGES=[
+  {id:'b1',n:'1',name:'Estudiante aplicado',desc:'Cierra el folio 1',test:function(){return !!save.best[1];}},
+  {id:'b2',n:'2',name:'Contador práctico',desc:'Cierra el folio 2',test:function(){return !!save.best[2];}},
+  {id:'b3',n:'3',name:'Ojo de auditor',desc:'Cierra el folio 3',test:function(){return !!save.best[3];}},
+  {id:'b4',n:'4',name:'Examen aprobado',desc:'Cierra el examen de los 14',test:function(){return !!save.best[4];}},
+  {id:'b5',n:'★',name:'Cuadre perfecto',desc:'Tres estrellas en cualquier folio',test:function(){return Object.keys(save.best).some(function(k){return save.best[k].stars===3;});}},
+  {id:'b6',n:'14',name:'Catorce de catorce',desc:'Domina los 14 principios',test:function(){return dominated()===14;}}
+];
+function earned(){return BADGES.filter(function(b){return b.test();}).map(function(b){return b.id;});}
+function totalScore(){return Object.keys(save.best).reduce(function(s,k){return s+save.best[k].score;},0);}
+function unlocked(n){return n===1||(save.best[n-1]&&save.best[n-1].stars>=1);}
+
+/* ---------- estado ---------- */
+var view='home', S=null, confirmReset=false;
+
+function star(on){return '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon class="'+(on?'on':'off')+'" points="12,2 15,9 22.5,9.6 16.8,14.5 18.6,22 12,18 5.4,22 7.2,14.5 1.5,9.6 9,9"/></svg>';}
+function stars(n,big){var h='';for(var i=0;i<3;i++)h+=star(i<n);return '<span class="stars'+(big?' big':'')+'" role="img" aria-label="'+n+' de 3 estrellas">'+h+'</span>';}
+
+/* ---------- vistas ---------- */
+function renderHome(){
+  var t=totalScore(),idx=0;
+  RANKS.forEach(function(r,i){if(t>=r[0])idx=i;});
+  var nxt=RANKS[idx+1],pct=nxt?Math.round((t-RANKS[idx][0])/(nxt[0]-RANKS[idx][0])*100):100;
+  var got=earned(),dom=dominated();
+  var h='';
+  h+='<header class="top"><div><p class="kicker">PCGA · Los 14 principios</p><h1>Cuadre Contable</h1>'+
+     '<p class="lead">Aprende jugando los 14 principios de contabilidad generalmente aceptados. Cuatro folios, tres vidas y un reloj en cada pregunta.</p></div>'+
+     '<div class="tacct" aria-hidden="true"><div class="th">Debe</div><div class="th">Haber</div>'+
+     '<div class="td">Terrenos<b>30.000</b></div><div class="td">Bancos<b>30.000</b></div>'+
+     '<div class="tcap">Valuación al costo: el terreno entra por lo que costó</div></div></header>';
+  h+='<section class="card rank" aria-label="Tu rango"><div><p class="kicker">Tu rango</p><h2>'+RANKS[idx][1]+'</h2></div>'+
+     '<div class="pts">'+t.toLocaleString('de-DE')+' <span>pts</span></div>'+
+     '<div class="meter" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div>'+
+     '<p class="small">'+(nxt?'Te faltan '+(nxt[0]-t).toLocaleString('de-DE')+' pts para ser '+nxt[1]+'. ':'Alcanzaste el rango más alto. ')+'Dominas '+dom+' de 14 principios.</p></section>';
+  h+='<section><div class="sec-title"><h2>Folios</h2><span class="small">Cierra uno para abrir el siguiente</span></div><ol class="levels">';
+  LEVELS.forEach(function(L){
+    var ok=unlocked(L.n),b=save.best[L.n];
+    h+='<li><button class="row" data-act="start" data-n="'+L.n+'"'+(ok?'':' disabled')+'>'+
+       '<span class="folio">Folio '+L.n+'</span><span class="nm">'+L.name+'</span>'+
+       '<span class="tg">'+(ok?L.tag:'Cierra el folio anterior para abrirlo.')+'</span>'+
+       '<span class="rt">'+stars(b?b.stars:0)+'<span class="mono small">'+(b?b.score+' pts':ok?'Sin jugar':'Bloqueado')+'</span></span></button></li>';
+  });
+  h+='</ol></section>';
+  h+='<section><div class="sec-title"><h2>Los 14 principios</h2><span class="small mono">'+dom+' de 14 dominados</span></div>'+
+     '<p class="small" style="margin-bottom:10px">Toca un principio para repasarlo. Se domina con dos aciertos.</p><div class="fich">';
+  ORDER.forEach(function(k,i){
+    var p=PR[k],m=save.mast[k]||0;
+    h+='<details><summary><span class="num">'+pad(i+1)+'</span><span class="pn">'+p.n+'</span>'+
+       '<span class="dots" role="img" aria-label="'+(m>=2?'Dominado':m+' de 2 aciertos')+'"><i class="'+(m>0?'on':'')+'"></i><i class="'+(m>1?'on':'')+'"></i></span></summary>'+
+       '<div class="fb2"><p>'+p.def+'</p><p class="key">Clave: '+p.tip+'</p><p class="ex">Ejemplo: '+p.caso+'</p></div></details>';
+  });
+  h+='</div></section>';
+  h+='<section><div class="sec-title"><h2>Insignias</h2><span class="small mono">'+got.length+' de '+BADGES.length+'</span></div><ul class="badges">';
+  BADGES.forEach(function(b){
+    var on=got.indexOf(b.id)>-1;
+    h+='<li class="badge'+(on?'':' locked')+'"><span class="seal" aria-hidden="true">'+b.n+'</span><div><b>'+b.name+'</b><span class="d">'+b.desc+'</span></div></li>';
+  });
+  h+='</ul></section>';
+  h+='<details class="card"><summary>Para usar en clase</summary><div class="body">'+
+     '<p>Cada folio tarda unos 5 minutos. Las preguntas priorizan los principios que el estudiante aún no domina. Puedes proyectar la pantalla y pedir a la clase que vote la respuesta antes de que se acabe el tiempo.</p>'+
+     '<p>La lista de 14 principios y su orden varían un poco entre textos. Esta sigue la versión más usada en la enseñanza de los PCGA. Si tu sílabo usa otra, conviene ajustarla.</p>'+
+     '<p>El progreso se guarda solo en este navegador.</p>'+
+     '<p><button class="ghost" data-act="reset">'+(confirmReset?'Confirmar: borrar mi progreso':'Reiniciar mi progreso')+'</button></p></div></details>';
+  app.innerHTML=h;
+}
+
+function hudHtml(){
+  var l='';for(var i=0;i<S.maxLives;i++)l+='<i class="'+(i<S.lives?'':'lost')+'"></i>';
+  return '<div class="lives" role="img" aria-label="'+S.lives+' vidas">'+l+'</div>'+
+         '<span class="st">'+(S.streak>1?'Racha de '+S.streak:'Sin racha')+'</span>'+
+         '<span class="sc mono">'+S.score+' pts</span>';
+}
+function renderPlay(){
+  var q=S.qs[S.i],L=S.L;
+  var h='<div class="bar"><button class="ghost" data-act="home">‹ Salir</button><span class="lv">Folio '+L.n+' · '+L.name+'</span></div>';
+  h+='<div class="hud" id="hud">'+hudHtml()+'</div>';
+  h+='<div class="timer"><div class="track"><i id="tbar"></i></div><span class="mono" id="ttxt">'+S.secs+' s</span></div>';
+  h+='<section class="card q"><div class="qhead"><span class="tag">'+q.tag+'</span><span class="kicker">Pregunta '+(S.i+1)+' de '+S.qs.length+'</span></div>';
+  h+='<p class="prompt">'+q.prompt+'</p><p class="ask">'+q.ask+'</p><div class="opts grid" id="opts">';
+  q.options.forEach(function(o,i){
+    h+='<button class="opt" data-act="ans" data-key="'+o.key+'"><span class="k">'+(i+1)+'</span><span>'+o.html+'</span></button>';
+  });
+  h+='</div><div id="fb" aria-live="polite"></div></section>';
+  app.innerHTML=h;
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(S.iv);
+  S.deadline=performance.now()+S.secs*1000;
+  S.iv=setInterval(tick,100);
+  tick();
+}
+function tick(){
+  if(!S||view!=='play'||S.locked)return;
+  S.left=Math.max(0,(S.deadline-performance.now())/1000);
+  var bar=document.getElementById('tbar'),txt=document.getElementById('ttxt');
+  if(bar){bar.style.width=(S.left/S.secs*100)+'%';bar.className=S.left/S.secs<.25?'low':'';}
+  if(txt)txt.textContent=Math.ceil(S.left)+' s';
+  if(S.left<=0)answer(null);
+}
+
+function answer(key){
+  if(!S||S.locked)return;
+  S.locked=true;clearInterval(S.iv);
+  var q=S.qs[S.i],ok=key!==null&&key===q.correct,timeout=key===null,gain=0,tb=0,sb=0;
+  if(ok){
+    S.streak++;S.maxStreak=Math.max(S.maxStreak,S.streak);S.right++;
+    tb=Math.round(S.left/S.secs*50);sb=Math.min((S.streak-1)*20,80);
+    gain=100+tb+sb;S.score+=gain;
+    save.mast[q.p]=Math.min(2,(save.mast[q.p]||0)+1);persist();
+  }else{
+    S.streak=0;S.lives--;
+    if(!S.missedIds[q.p]){S.missedIds[q.p]=1;S.missed.push({concept:q.concept,explain:q.review});}
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#opts .opt'),function(b){
+    b.disabled=true;
+    if(b.getAttribute('data-key')===q.correct)b.classList.add('is-correct');
+    else if(b.getAttribute('data-key')===key)b.classList.add('is-wrong');
+  });
+  document.getElementById('hud').innerHTML=hudHtml();
+  var last=S.lives<=0||S.i>=S.qs.length-1;
+  var label=ok?'Cuadra':(timeout?'Se acabó el tiempo':'No cuadra');
+  var fb='<div class="fb '+(ok?'ok':'no')+'"><span class="stamp">'+label+'</span>';
+  if(ok)fb+='<p class="gain">+'+gain+' pts <span class="small">(100 base'+(tb?' + '+tb+' por rapidez':'')+(sb?' + '+sb+' por racha':'')+')</span></p>';
+  if(!ok)fb+='<p><b>Correcto: '+PR[q.correct].n+'.</b></p>';
+  fb+='<p>'+q.explain+'</p>';
+  if(!ok&&!timeout)fb+='<p class="small">Elegiste <b>'+PR[key].n+'</b>: '+PR[key].def+'</p>';
+  fb+='<button class="btn" id="nextbtn" data-act="next">'+(last?(S.lives<=0?'Ver resultado':'Cerrar folio'):'Siguiente')+'</button></div>';
+  document.getElementById('fb').innerHTML=fb;
+  var nb=document.getElementById('nextbtn');if(nb)nb.focus();
+}
+
+function next(){
+  if(S.lives<=0)return finish(false);
+  if(S.i>=S.qs.length-1)return finish(true);
+  S.i++;S.locked=false;renderPlay();
+}
+
+function reviewHtml(){
+  if(!S.missed.length)return '';
+  var h='<div class="review"><h2>Para repasar</h2><ul class="review">';
+  S.missed.forEach(function(m){h+='<li><b>'+m.concept+'</b><span>'+m.explain+'</span></li>';});
+  return h+'</ul></div>';
+}
+function finish(pass){
+  clearInterval(S.iv);
+  var before=earned(),st=0;
+  if(pass){
+    var r=S.lives/S.maxLives;st=r>=0.67?3:r>=0.34?2:1;
+  }
+  S.pass=pass;S.stars=st;
+  if(pass){
+    var prev=save.best[S.L.n];
+    save.best[S.L.n]={score:Math.max(prev?prev.score:0,S.score),stars:Math.max(prev?prev.stars:0,st)};
+  }
+  persist();
+  S.newBadges=BADGES.filter(function(b){return b.test()&&before.indexOf(b.id)<0;});
+  view=pass?'result':'fail';
+  render();
+}
+function renderResult(){
+  var L=S.L,h='<div class="res"><p class="kicker">Folio '+L.n+' · '+L.name+'</p>';
+  if(S.pass){
+    h+='<h1>Folio cerrado</h1>'+stars(S.stars,true);
+    h+='<div class="facts"><div><b>'+S.score+'</b><span class="small">puntos</span></div><div><b>'+S.right+'/'+S.qs.length+'</b><span class="small">aciertos</span></div><div><b>'+S.maxStreak+'</b><span class="small">racha máxima</span></div><div><b>'+dominated()+'/14</b><span class="small">dominados</span></div></div>';
+  }else{
+    h+='<h1>El folio no cuadró</h1><p class="small">Te quedaste sin vidas con '+S.right+' de '+S.qs.length+' aciertos. Repasa los principios de abajo e inténtalo de nuevo.</p>';
+  }
+  S.newBadges.forEach(function(b){h+='<div class="newb"><span class="seal" aria-hidden="true">'+b.n+'</span><div><b>Insignia nueva: '+b.name+'</b><br><span class="small">'+b.desc+'</span></div></div>';});
+  h+=reviewHtml();
+  h+='<div class="actions">';
+  if(S.pass&&L.n<LEVELS.length)h+='<button class="btn" data-act="start" data-n="'+(L.n+1)+'">Abrir folio '+(L.n+1)+'</button>';
+  h+='<button class="btn'+(S.pass&&L.n<LEVELS.length?' alt':'')+'" data-act="start" data-n="'+L.n+'">'+(S.pass?'Jugar otra vez':'Reintentar')+'</button>';
+  h+='<button class="btn alt" data-act="home">Inicio</button></div></div>';
+  app.innerHTML=h;
+}
+
+function render(){
+  if(view==='home')renderHome();
+  else if(view==='play')renderPlay();
+  else renderResult();
+  window.scrollTo(0,0);
+}
+function startLevel(n){
+  var L=LEVELS[n-1];
+  S={L:L,qs:L.build(),i:0,lives:L.lives,maxLives:L.lives,score:0,streak:0,maxStreak:0,right:0,missed:[],missedIds:{},locked:false,secs:L.secs,left:L.secs,iv:null};
+  view='play';render();
+}
+
+/* ---------- eventos ---------- */
+app.addEventListener('click',function(e){
+  var t=e.target.closest('[data-act]');if(!t||t.disabled)return;
+  var a=t.getAttribute('data-act');
+  if(a==='start')startLevel(parseInt(t.getAttribute('data-n'),10));
+  else if(a==='ans')answer(t.getAttribute('data-key'));
+  else if(a==='next')next();
+  else if(a==='home'){if(S)clearInterval(S.iv);view='home';render();}
+  else if(a==='reset'){
+    if(confirmReset){save={best:{},mast:{}};persist();confirmReset=false;}else confirmReset=true;
+    renderHome();
+    var d=app.querySelector('details.card');if(d)d.open=true;
+  }
+});
+document.addEventListener('keydown',function(e){
+  if(view!=='play'||!S||S.locked)return;
+  var n=parseInt(e.key,10);if(!n)return;
+  var bs=document.querySelectorAll('#opts .opt');
+  if(bs[n-1])bs[n-1].click();
+});
+
+render();
+})();
+</script>
+
+</body></html>
